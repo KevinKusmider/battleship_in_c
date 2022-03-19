@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <arpa/inet.h> 
 
+#include "../headers/protoserv.h"
+
 #define NBCLI 3 
 #define PORT 3550 
 #define ADDRESS "127.0.0.1" 
@@ -17,11 +19,11 @@
 //============================================================== 
 int main() 
 {     
-  int sd, ns , fromlen,i,retfork,retsend;
+  int sd, ns, fromlen, i, retfork, retsend;
 
   struct sockaddr_in my_addr, user_addr ; 
  
-  char *buffer= "Bienvenue sur le multiclient en reseau";      
+  char *buffer= "a\0bc";      
   i=0; 
      
   if((sd=socket(AF_INET,SOCK_STREAM,0)) == -1) { 
@@ -46,8 +48,8 @@ int main()
  
   for(;;) {   
     printf("\n i= %d Avant accept \n",i);
-    ns=accept(sd,(struct sockaddr *)&user_addr,&fromlen); 
-    if (ns==-1) { 
+    ns = accept(sd,(struct sockaddr *)&user_addr,&fromlen); 
+    if (ns == -1) { 
       perror("\n Erreur accept : \n"); 
       exit(4); 
     } 
@@ -61,12 +63,15 @@ int main()
       
     // FILS
     if (retfork==0) {  //  on pourrait utiliser write (idem) au lieu  de send 
-      retsend=send (ns,buffer,strlen(buffer)+1,0);
-      if (retsend==-1) { 
-        perror("\n Erreur send : \n"); 
-        exit(6); 
-      } 
-      printf ("\n i= %d retour send = %d \n",i,retsend);
+      int connected = 0;
+      RESPONSE *response;
+      if(NULL == (response = malloc(sizeof(RESPONSE)))) {
+        exit(6)
+      }
+
+      send_answer(ns, "login", "");
+      listen_answer(ns, response);
+
       //mort du fils
       exit(7); 
     }
