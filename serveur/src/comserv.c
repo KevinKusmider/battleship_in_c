@@ -6,7 +6,23 @@
 #include <unistd.h>
 #include <arpa/inet.h> 
 
-int send_answer(int ns, char * type, char * content) {
+#include "../headers/protoserv.h"
+
+void show_response(RESPONSE *response) {
+    printf("\nFull response : %s", response->fullResponse);
+    printf("\nType : %s", response->type);
+    printf("\nContent : %s\n", response->content);
+}
+
+int reset_response(RESPONSE *response) {
+    strcpy(response->fullResponse, "\0");
+    strcpy(response->type, "\0");
+    response->content = NULL;
+
+    return 1;  
+}
+
+int send_response(int ns, char * type, char * content) {
     
     if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) return 0;
     if((strlen(type) + strlen(content) + 3) > 500) return 0;
@@ -19,30 +35,28 @@ int send_answer(int ns, char * type, char * content) {
     return retSend;
 }
 
-int listen_answer(int ns) {
+int listen_response(int ns, RESPONSE *response) {
+    reset_response(response);
+
     for(;;) {
         int retrecv; 
-        char fullResponse[500]; 
-        char type[100]; // "login:admin\0"
-        char *content;
 
-        retrecv = recv (ns, fullResponse, 500, 0);
+        retrecv = recv(ns, response->fullResponse, 500, 0);
         if (retrecv == -1) { 
             perror("\n Erreur recv : "); 
             exit(3); 
         } 
-        sscanf(fullResponse, "%[^:]", type);
 
-        content = fullResponse + strlen(type)+1;
+        sscanf(response->fullResponse, "%[^:]", response->type);
+
+        response->content = response->fullResponse + strlen(response->type)+1;
       
-        if (strcmp(type, "login") == 0) 
-        {
-            checkLogin(ns, content);
-            continue;
-        } 
+        if(strlen(response->fullResponse) != 0) {
+            break;
+        }
     }
 
-   return 0;
+    return 1;
 }
 
 /**

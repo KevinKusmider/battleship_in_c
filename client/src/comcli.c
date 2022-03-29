@@ -15,15 +15,32 @@
 //  L'adresse IP du serveur est dans ADRESS ET LE PORT dans PORT 
 //============================================================== 
 
-void sendLogin(int ns) {
-   char login[255];
-   printf("\nLogin ? ");
-   scanf("%s", login);
+int send_asked_str(int ns, char *question, char *type) {
+   char content[255];
+   printf("\n%s ", question);
+   scanf("%s", content);
 
-   send_answer(ns, "login", login);
+   send_response(ns, type, content);
+   clean_stdin();
+
+   return 1;
 }
  
-int send_answer(int ns, char * type, char * content) {
+void show_response(RESPONSE *response) {
+    printf("\nFull response : %s", response->fullResponse);
+    printf("\nType : %s", response->type);
+    printf("\nContent : %s\n", response->content);
+}
+
+int reset_response(RESPONSE *response) {
+    strcpy(response->fullResponse, "\0");
+    strcpy(response->type, "\0");
+    response->content = NULL;
+
+    return 1;  
+}
+
+int send_response(int ns, char * type, char * content) {
     
     if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) return 0;
     if((strlen(type) + strlen(content) + 3) > 500) return 0;
@@ -36,38 +53,48 @@ int send_answer(int ns, char * type, char * content) {
     return retSend;
 }
 
-int listen_answer(int ns) {
-   for(;;) {
-      int retrecv; 
-      char fullResponse[500]; 
-      char type[100];
-      char content [400];
+int listen_response(int ns, RESPONSE *response) {
+    reset_response(response);
 
-      retrecv = recv (ns, fullResponse, 500, 0);
-      if (retrecv == -1) { 
-         perror("\n Erreur recv : "); 
-         exit(3); 
-      } 
-      sscanf(fullResponse, "%[^:]", type);
+    for(;;) {
+        int retrecv; 
 
-            
-      if (strcmp(type, "login") == 0) 
-      {
-         sendLogin(ns);
-         continue;
-      } 
-   }
+        retrecv = recv(ns, response->fullResponse, 500, 0);
+        if (retrecv == -1) { 
+            perror("\n Erreur recv : "); 
+            exit(3); 
+        } 
 
-   return 0;
+        sscanf(response->fullResponse, "%[^:]", response->type);
+
+        response->content = response->fullResponse + strlen(response->type)+1;
+      
+        if(strlen(response->fullResponse) != 0) {
+            break;
+        }
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Vider le flux d'entrée 
+ * 
+ */
+void clean_stdin() {
+    int c;
+    do {
+        c = getchar();
+    } while (c != '\n' && c != EOF);
 }
 
 
 int main() 
 {   
    int sd, fromlen, retrecv; 
-   char essai[39]; 
    struct sockaddr_in   dest_addr ; 
-       
+   int playing = 1;
+
    if((sd=socket(AF_INET,SOCK_STREAM,0)) == -1) { 
       perror("\n Erreur socket : "); 
       exit(1); 
@@ -83,8 +110,35 @@ int main()
       exit(2); 
    } 
          
-   while(1) {
-      listen_answer(sd);
+   RESPONSE *response;
+   if(NULL == (response = malloc(sizeof(RESPONSE)))) {
+      exit(6);
+   }
+
+   while(playing) {
+      listen_response(sd, response);
+      show_response(response);
+
+      if(!strcmp(response->type, "login")) {
+         send_asked_str(sd, "Login ?", "login");
+      }
+
+      if(!strcmp(response->type, "password")) {
+         send_asked_str(sd, "Password ?", "password");
+      }
+
+      if(!strcmp(response->type, "logged")) {
+         printf("\nWaiting for the game to start");
+      }
+
+      // Admin
+      if(!strcmp(response->type, "show_admin_menu")) {
+         printf("\nconnected as : ADMIN\n\n 1. Show users\n 2. Create User\n\n");
+         char action[1] = "\0";
+         printf("What do you want to do ? ");
+         scanf("%c", action);
+         send_response(sd, "admin_request", action);
+      }
    }   
    
    exit(0); 
