@@ -26,9 +26,8 @@ int main()
 {     
   int sd, ns, fromlen, i, retfork, retsend;
 
-  int shmID, shmID_players, CLE = 3500;
+  int shmID, CLE = 2300;
   GAME *game = NULL;
-  PLAYER *players = NULL;
 
   shmID = shmget((key_t)CLE, sizeof(GAME), IPC_CREAT|0700);
   game = shmat(shmID, NULL, 0);
@@ -198,7 +197,7 @@ int main()
 
             send_response(ns, "show_admin_menu", game->plate);
 
-            } 
+          } 
 
           if(!strcmp(response->type, "list_users")) {
             printf("\nAffichage des utilisateurs");
