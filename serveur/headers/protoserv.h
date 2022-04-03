@@ -11,9 +11,14 @@
     typedef struct GAME 
     {
         char plate[500];
+        char plateC[500];
         int width;
         int height;
-        int currentPlayerId;
+        int currentPlayer;
+        int ready;
+        int started;
+        PLAYER playerOne;
+        PLAYER playerTwo;
     } GAME;
 
     typedef struct RESPONSE

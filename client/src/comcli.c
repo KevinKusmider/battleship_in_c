@@ -93,7 +93,7 @@ int main()
 {   
    int sd, fromlen, retrecv; 
    struct sockaddr_in   dest_addr ; 
-   int playing = 1;
+   int connected = 1;
 
    if((sd=socket(AF_INET,SOCK_STREAM,0)) == -1) { 
       perror("\n Erreur socket : "); 
@@ -115,7 +115,7 @@ int main()
       exit(6);
    }
 
-   while(playing) {
+   while(connected) {
       listen_response(sd, response);
       show_response(response);
 
@@ -131,13 +131,87 @@ int main()
          printf("\nWaiting for the game to start");
       }
 
+      if(!strcmp(response->type, "show")) {
+         printf("\n%s", response->content);
+      }
+
+      if(!strcmp(response->type, "ask_target")) {
+         if(strcmp(response->content, "")) {
+            printf("\n%s\n", response->content);
+         }
+
+         char target[10];
+
+         printf("\nOù voulez vous attaquer ?");
+         scanf("%s", target);
+
+         send_response(sd, "send_target", target);
+
+      }
+
       // Admin
       if(!strcmp(response->type, "show_admin_menu")) {
-         printf("\nconnected as : ADMIN\n\n 1. Show users\n 2. Create User\n\n");
-         char action[1] = "\0";
-         printf("What do you want to do ? ");
-         scanf("%c", action);
-         send_response(sd, "admin_request", action);
+         if(strcmp(response->content, "")) {
+            printf("%s", response->content);
+         }
+
+         int actionInt = -1;
+         char action[30] = "";
+         char content[100] = "";
+
+         printf("\n\n 1. Show users\n 2. Create User\n 3. Create game\n 4. Start game\n\n");
+
+         while(actionInt < 1 || actionInt > 4) {
+            printf("What do you want to do ? ");
+            scanf("%d", &actionInt);
+
+            switch (actionInt)
+            {
+               case 1: strcpy(action, "list_users"); break;
+               case 2: strcpy(action, "create_user"); break;
+               case 3: 
+                  strcpy(action, "create_game"); 
+                  int row = 0, col = 0;
+                  while(row < 1 || row > 10) {
+                     printf("\nCombien de lignes ? ");
+                     scanf("%d", &row);
+                  }
+
+                  while(col < 1 || col > 10) {
+                     printf("\nCombien de colonnes ? ");
+                     scanf("%d", &col);
+                  }
+
+                  sprintf(content, "%d,%d", row, col);
+
+                  break;
+                  case 4: strcpy(action, "start_game"); break;
+            }
+         }
+
+         send_response(sd, action, content);
+      }
+
+      if(!strcmp(response->type, "ask_boat")) {
+         char target[3] = "";
+         char orientation[2] = "";
+         char content[10] = "";
+
+         printf("\nAjouter un navire\n\n");
+
+         if(strcmp(response->content, "")) {
+            printf("%s", response->content);
+         }
+
+         printf("\nOu le placer ? (A1 / 0) ");
+         scanf("%s", target);
+
+         printf("\nOrientation ? (V / H) ");
+         scanf("%s", orientation);
+
+         sprintf(content, "%s,%s", target, orientation);
+
+         send_response(sd, "add_boat", content);
       }
    }   
    

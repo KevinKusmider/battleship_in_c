@@ -1,6 +1,13 @@
 #ifndef __PROTOCOMCLI_H__
 #define __PROTOCOMCLI_H__
 
+    typedef struct GAME 
+    {
+        char plate[500];
+        int width;
+        int height;
+    } GAME;
+
     typedef struct RESPONSE
     {
         char fullResponse[100];
