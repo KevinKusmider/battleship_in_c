@@ -13,7 +13,6 @@
 #define PORT 3550 
 #define ADDRESS "127.0.0.1" 
 
-int list_all_players(int ns, PLAYER *players);
 int create_game(char *plate, int height, int width);
 int check_target(GAME *game, char *target);
 int get_plate_indice(GAME *game, char *target);
@@ -27,7 +26,7 @@ int main()
 {     
   int sd, ns, fromlen, i, retfork, retsend;
 
-  int shmID, shmID_players, CLE = 2500;
+  int shmID, shmID_players, CLE = 3500;
   GAME *game = NULL;
   PLAYER *players = NULL;
 
@@ -92,7 +91,7 @@ int main()
     if (retfork==0) {  //  on pourrait utiliser write (idem) au lieu  de send 
       int i = 0;
 
-      int user = 0; // 0 : Not connected, 1 : Client, 2 : Admin
+      int user = 0; // 0 : Not connected, 1 : Admin, 2+ : client
       int connected = 1;
       int boats = 0;
 
@@ -127,26 +126,41 @@ int main()
               game->playerTwo.isLogged = 1;
               send_response(ns, "logged", game->playerTwo.name);
             }
-           
-            if(user > 1){
+        
+
+            if(user > 1) {
               while (!game->started) {
                 sleep(2);
                 send_response(ns, "show", "\nAttente...");
                 sleep(1);
               }
 
+              int targetIndex = 0; 
+
               while(game->started) {
                 if(game->currentPlayer == user) {
                   send_response(ns, "ask_target", game->plateC);
                   listen_response(ns, response);
-                  if(check_target(game, response->content)) {
+                  if(check_target(game, response->content) == 1) {
+                    targetIndex = get_plate_indice(game, response->content);
+                    if(targetIndex > 0 && game->plate[targetIndex] == 'H') {
+                      game->plate[targetIndex] = 'X';
+                      game->plateC[targetIndex] = 'X';
+                      if(game->currentPlayer == 2) {
+                        game->playerOne.score = game->playerOne.score+1;
+                      } else {
+                        game->playerTwo.score = game->playerTwo.score+1;
+                      }
+                    } else {
+                      game->plate[targetIndex] = 'O';
+                      game->plateC[targetIndex] = 'O';
+                    }
                     game->currentPlayer = game->currentPlayer == 2 ? 3 : 2;
+                    send_response(ns, "show", game->plateC);
                   }
                 }
-              }
-
+              } // END OF GAME
             }
-            
           }
         }
 
@@ -213,16 +227,9 @@ int main()
 
           if(!strcmp(response->type, "add_boat")) {
               int index;
-              char * strToken = strtok ( response->content, ",");
-
-              char target[10], orientation[5];
-              strcpy(target, strToken);
-              strToken = strtok ( NULL, ",");
-              strcpy(orientation, strToken);
-
-              printf("\n%s %s\n", target, orientation);
+              printf("\n%s\n", response->content);
               if(strcmp(response->content, "0")) {
-                if((index = get_plate_indice(game, target)) != -1) {
+                if((index = get_plate_indice(game, response->content)) != -1) {
                   if(game->plate[index] == 'H') {
                     printf("\nImpossible\n");
                   } else {
@@ -264,18 +271,6 @@ int main()
     // PERE
     if(i > NBCLI) exit(8); 
   } 
-}
-
-int list_all_players(int ns, PLAYER *players) {
-  int i;
-  char player[255];
-
-  for(i=0 ; i<2 ; i++) {
-    sprintf(player, "\nid : %d\nname : %s\npass : %s\n", players[i].id, players[i].name, players[i].pass);
-    send_response(ns, "show", player);
-  }
-
-  return 1;
 }
 
 int create_game(char *plate, int height, int width) {
@@ -350,7 +345,3 @@ int get_plate_indice(GAME *game, char *target) {
   return index;
 }
 
-
-// int create_player(GAME *game, char *name){
-//   game->playerOne.name
-// }

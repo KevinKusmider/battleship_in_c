@@ -142,7 +142,7 @@ int main()
 
          char target[10];
 
-         printf("\nOù voulez vous attaquer ?");
+         printf("\nOù voulez vous attaquer ? ");
          scanf("%s", target);
 
          send_response(sd, "send_target", target);
@@ -212,7 +212,6 @@ int main()
       if(!strcmp(response->type, "ask_boat")) {
          char target[3] = "";
          char orientation[2] = "";
-         char content[10] = "";
 
          printf("\nAjouter un navire\n\n");
 
@@ -223,12 +222,7 @@ int main()
          printf("\nOu le placer ? (A1 / 0) ");
          scanf("%s", target);
 
-         printf("\nOrientation ? (V / H) ");
-         scanf("%s", orientation);
-
-         sprintf(content, "%s,%s", target, orientation);
-
-         send_response(sd, "add_boat", content);
+         send_response(sd, "add_boat", target);
       }
    }   
    
