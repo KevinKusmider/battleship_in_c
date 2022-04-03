@@ -36,6 +36,16 @@ int main()
   game->ready = 0;
   game->started = 0;
 
+  game->playerOne.id = '\0';
+  strcpy(game->playerOne.name, "\0");
+  strcpy(game->playerOne.pass, "\0");
+  game->playerOne.isLogged = '\0';
+  game->playerTwo.id = '\0';
+  strcpy(game->playerTwo.name, "\0");
+  strcpy(game->playerTwo.pass, "\0");
+  game->playerTwo.isLogged = '\0';
+
+
   struct sockaddr_in my_addr, user_addr ; 
      
   i=0; 
@@ -61,6 +71,8 @@ int main()
     exit(3); 
   } 
  
+
+
   for(;;) {   
     printf("\n i= %d Avant accept \n",i);
     ns = accept(sd,(struct sockaddr *)&user_addr,&fromlen); 
@@ -99,15 +111,7 @@ int main()
           if(!strcasecmp(response->content, "Admin")) {
             user = 1;
             send_response(ns, "show_admin_menu", "");
-            // CREATING a user HAVE TO BE REPLACED
-            game->playerOne.id = 2;
-            strcpy(game->playerOne.name, "test");
-            strcpy(game->playerOne.pass, "test");
-            game->playerOne.isLogged = 0;
-            game->playerTwo.id = 3;
-            strcpy(game->playerTwo.name, "teste");
-            strcpy(game->playerTwo.pass, "teste");
-            game->playerTwo.isLogged = 0;
+
           } else {
             char name[100];
             strcpy(name, response->content);
@@ -123,21 +127,24 @@ int main()
               game->playerTwo.isLogged = 1;
               send_response(ns, "logged", game->playerTwo.name);
             }
+           
+            if(user > 1){
+              while (!game->started) {
+                sleep(2);
+                send_response(ns, "show", "\nAttente...");
+                sleep(1);
+              }
 
-            while (!game->started) {
-              sleep(2);
-              send_response(ns, "show", "\nAttente...");
-              sleep(1);
-            }
-
-            while(game->started) {
-              if(game->currentPlayer == user) {
-                send_response(ns, "ask_target", game->plateC);
-                listen_response(ns, response);
-                if(check_target(game, response->content)) {
-                  game->currentPlayer = game->currentPlayer == 2 ? 3 : 2;
+              while(game->started) {
+                if(game->currentPlayer == user) {
+                  send_response(ns, "ask_target", game->plateC);
+                  listen_response(ns, response);
+                  if(check_target(game, response->content)) {
+                    game->currentPlayer = game->currentPlayer == 2 ? 3 : 2;
+                  }
                 }
               }
+
             }
             
           }
@@ -147,11 +154,45 @@ int main()
         if(user == 1) {
           if(!strcmp(response->type, "create_user")) {
             printf("\nCréation d'un utilisateur");
-          } 
+            char * strToken = strtok ( response->content, ",");
+
+            int id;
+            char name[100];
+            char pass[100];
+            int id2;
+            char name2[100];
+            char pass2[100];
+            id = strToken ? atoi(strToken) : 0;
+            strToken = strtok ( NULL, ",");
+            strcpy(name, strToken);
+            strToken = strtok ( NULL, ",");
+            strcpy(pass, strToken);
+            strToken = strtok ( NULL, ",");
+            id2 = strToken ? atoi(strToken) : 0;
+            strToken = strtok ( NULL, ",");
+            strcpy(name2, strToken);
+            strToken = strtok ( NULL, ",");
+            strcpy(pass2, strToken);
+
+            game->playerOne.id = id;
+            strcpy(game->playerOne.name,name);
+            strcpy(game->playerOne.pass,pass);
+
+            game->playerTwo.id = id2;
+            strcpy(game->playerTwo.name,name2);
+            strcpy(game->playerTwo.pass,pass2);
+
+            send_response(ns, "show_admin_menu", game->plate);
+
+            } 
 
           if(!strcmp(response->type, "list_users")) {
             printf("\nAffichage des utilisateurs");
-            list_all_players(ns, players);
+            send_response(ns, "show", game->playerOne.name);
+            sleep(1);
+            send_response(ns, "show", game->playerTwo.name);
+            sleep(1);
+            send_response(ns, "show_admin_menu", game->plate);
           } 
 
           if(!strcmp(response->type, "create_game")) {
@@ -308,3 +349,8 @@ int get_plate_indice(GAME *game, char *target) {
 
   return index;
 }
+
+
+// int create_player(GAME *game, char *name){
+//   game->playerOne.name
+// }

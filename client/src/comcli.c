@@ -157,7 +157,7 @@ int main()
 
          int actionInt = -1;
          char action[30] = "";
-         char content[100] = "";
+         char content[500] = "";
 
          printf("\n\n 1. Show users\n 2. Create User\n 3. Create game\n 4. Start game\n\n");
 
@@ -168,7 +168,24 @@ int main()
             switch (actionInt)
             {
                case 1: strcpy(action, "list_users"); break;
-               case 2: strcpy(action, "create_user"); break;
+               case 2: 
+                  strcpy(action, "create_user");
+                  int id;
+                  char playerOne[100];
+                  char playerTwo[100];
+                  char mdpOne[100];
+                  char mdpTwo[100];
+                  printf("\nCreer les Players");
+                  printf("\nlogin Player 1:");
+                  scanf("%s",playerOne);
+                  printf("\nMot de passe? :");
+                  scanf("%s",mdpOne);
+                  printf("\nlogin Player 2:");
+                  scanf("%s",playerTwo);
+                  printf("\nMot de passe? :");
+                  scanf("%s",mdpTwo);
+                  sprintf(content, "2,%s,%s,3,%s,%s", playerOne, mdpOne, playerTwo, mdpTwo);
+                  break;    
                case 3: 
                   strcpy(action, "create_game"); 
                   int row = 0, col = 0;
