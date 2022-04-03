@@ -5,6 +5,7 @@
         int id;
         char name[100];
         char pass[100];
+        int score;
         int isLogged;
     } PLAYER;
 
