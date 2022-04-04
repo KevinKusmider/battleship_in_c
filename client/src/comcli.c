@@ -17,7 +17,7 @@
 
 int send_asked_str(int ns, char *question, char *type) {
    char content[255];
-   printf("\n%s ", question);
+   printf("%s ", question);
    scanf("%s", content);
 
    send_response(ns, type, content);
@@ -43,9 +43,9 @@ int reset_response(RESPONSE *response) {
 int send_response(int ns, char * type, char * content) {
     
     if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) return 0;
-    if((strlen(type) + strlen(content) + 3) > 500) return 0;
+    if((strlen(type) + strlen(content) + 3) > 1000) return 0;
 
-    char toSend[500];
+    char toSend[1000];
     int retSend;
     sprintf(toSend, "%s:%s", type, content);
 
@@ -59,7 +59,7 @@ int listen_response(int ns, RESPONSE *response) {
     for(;;) {
         int retrecv; 
 
-        retrecv = recv(ns, response->fullResponse, 500, 0);
+        retrecv = recv(ns, response->fullResponse, 1000, 0);
         if (retrecv == -1) { 
             perror("\n Erreur recv : "); 
             exit(3); 
@@ -117,18 +117,18 @@ int main()
 
    while(connected) {
       listen_response(sd, response);
-      show_response(response);
+      //show_response(response);
 
       if(!strcmp(response->type, "login")) {
          send_asked_str(sd, "Login ?", "login");
       }
 
       if(!strcmp(response->type, "password")) {
-         send_asked_str(sd, "Password ?", "password");
+         send_asked_str(sd, "Mot de passe ?", "password");
       }
 
       if(!strcmp(response->type, "logged")) {
-         printf("\nWaiting for the game to start");
+         printf("\nEn attente du lancement de la partie");
       }
 
       if(!strcmp(response->type, "show")) {
@@ -158,11 +158,12 @@ int main()
          int actionInt = -1;
          char action[30] = "";
          char content[150] = "";
-
-         printf("\n\n 1. Show users\n 2. Create User\n 3. Create game\n 4. Start game\n\n");
+         printf("\n=====================================================================\n");
+         printf("\n 1. Afficher les Utilisateurs\n 2. Créer les Utilisateurs\n 3. Créer le Jeu\n 4. Lancer le Jeu\n");
+         printf("\n=====================================================================\n");
 
          while(actionInt < 1 || actionInt > 4) {
-            printf("What do you want to do ? ");
+            printf("\nQue voulez-vous faire ? ");
             scanf("%d", &actionInt);
 
             switch (actionInt)
@@ -175,14 +176,16 @@ int main()
                   char playerTwo[30];
                   char mdpOne[30];
                   char mdpTwo[30];
-                  printf("\nCreer les Players");
-                  printf("\nlogin Player 1:");
+                  printf("\n=====================================================================\n");
+                  printf(" Creer les Joueurs");
+                  printf("\n=====================================================================\n");
+                  printf("\nLogin Joueur 1 : ");
                   scanf("%s",playerOne);
-                  printf("\nMot de passe? :");
+                  printf("Mot de passe : ");
                   scanf("%s",mdpOne);
-                  printf("\nlogin Player 2:");
+                  printf("\nLogin Joueur 2 : ");
                   scanf("%s",playerTwo);
-                  printf("\nMot de passe? :");
+                  printf("Mot de passe : ");
                   scanf("%s",mdpTwo);
                   sprintf(content, "2,%s,%s,3,%s,%s", playerOne, mdpOne, playerTwo, mdpTwo);
                   break;    
@@ -190,12 +193,12 @@ int main()
                   strcpy(action, "create_game"); 
                   int row = 0, col = 0;
                   while(row < 1 || row > 10) {
-                     printf("\nCombien de lignes ? ");
+                     printf("\nCombien de lignes : ");
                      scanf("%d", &row);
                   }
 
                   while(col < 1 || col > 10) {
-                     printf("\nCombien de colonnes ? ");
+                     printf("\nCombien de colonnes : ");
                      scanf("%d", &col);
                   }
 
@@ -219,7 +222,7 @@ int main()
             printf("%s", response->content);
          }
 
-         printf("\nOu le placer ? (A1 / 0) ");
+         printf("\nOu le placer ? (A1 / 0) : ");
          scanf("%s", target);
 
          send_response(sd, "add_boat", target);

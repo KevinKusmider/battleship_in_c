@@ -24,7 +24,7 @@
 
     typedef struct RESPONSE
     {
-        char fullResponse[100];
+        char fullResponse[1000];
         char type[100];
         char *content;
     } RESPONSE;

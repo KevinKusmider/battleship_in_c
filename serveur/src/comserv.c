@@ -25,9 +25,9 @@ int reset_response(RESPONSE *response) {
 int send_response(int ns, char * type, char * content) {
     
     if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) return 0;
-    if((strlen(type) + strlen(content) + 3) > 500) return 0;
+    if((strlen(type) + strlen(content) + 3) > 1000) return 0;
 
-    char toSend[500];
+    char toSend[1000];
     int retSend;
     sprintf(toSend, "%s:%s", type, content);
 
@@ -41,7 +41,7 @@ int listen_response(int ns, RESPONSE *response) {
     for(;;) {
         int retrecv; 
 
-        retrecv = recv(ns, response->fullResponse, 500, 0);
+        retrecv = recv(ns, response->fullResponse, 1000, 0);
         if (retrecv == -1) { 
             perror("\n Erreur recv : "); 
             exit(3); 

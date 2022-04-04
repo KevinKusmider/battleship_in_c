@@ -26,7 +26,7 @@ int main()
 {     
   int sd, ns, fromlen, i, retfork, retsend;
 
-  int shmID, CLE = 2300;
+  int shmID, CLE = 2500;
   GAME *game = NULL;
 
   shmID = shmget((key_t)CLE, sizeof(GAME), IPC_CREAT|0700);
@@ -102,7 +102,7 @@ int main()
         if(!user) send_response(ns, "login", "");
 
         listen_response(ns, response);
-        show_response(response);
+        //show_response(response);
 
         // Authentication
         if(!strcmp(response->type, "login")) {
@@ -195,7 +195,7 @@ int main()
             strcpy(game->playerTwo.name,name2);
             strcpy(game->playerTwo.pass,pass2);
 
-            send_response(ns, "show_admin_menu", game->plate);
+            send_response(ns, "show_admin_menu", "");
 
           } 
 
@@ -205,7 +205,7 @@ int main()
             sleep(1);
             send_response(ns, "show", game->playerTwo.name);
             sleep(1);
-            send_response(ns, "show_admin_menu", game->plate);
+            send_response(ns, "show_admin_menu", "");
           } 
 
           if(!strcmp(response->type, "create_game")) {
