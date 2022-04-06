@@ -171,7 +171,6 @@ int main()
                case 1: strcpy(action, "list_users"); break;
                case 2: 
                   strcpy(action, "create_user");
-                  int id;
                   char playerOne[30];
                   char playerTwo[30];
                   char mdpOne[30];
@@ -187,7 +186,7 @@ int main()
                   scanf("%s",playerTwo);
                   printf("Mot de passe : ");
                   scanf("%s",mdpTwo);
-                  sprintf(content, "2,%s,%s,3,%s,%s", playerOne, mdpOne, playerTwo, mdpTwo);
+                  sprintf(content, "%s,%s,%s,%s", playerOne, mdpOne, playerTwo, mdpTwo);
                   break;    
                case 3: 
                   strcpy(action, "create_game"); 
@@ -226,6 +225,7 @@ int main()
          scanf("%s", target);
 
          send_response(sd, "add_boat", target);
+         clean_stdin();
       }
    }   
    

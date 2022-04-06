@@ -26,7 +26,7 @@ int main()
 {     
   int sd, ns, fromlen, i, retfork, retsend;
 
-  int shmID, CLE = 2500;
+  int shmID, CLE = 3100;
   GAME *game = NULL;
 
   shmID = shmget((key_t)CLE, sizeof(GAME), IPC_CREAT|0700);
@@ -34,14 +34,16 @@ int main()
   game->ready = 0;
   game->started = 0;
 
-  game->playerOne.id = '\0';
+  game->playerOne.id = 0;
   strcpy(game->playerOne.name, "\0");
   strcpy(game->playerOne.pass, "\0");
-  game->playerOne.isLogged = '\0';
-  game->playerTwo.id = '\0';
+  game->playerOne.score = 0;
+  game->playerOne.isLogged = 0;
+  game->playerTwo.id = 0;
   strcpy(game->playerTwo.name, "\0");
   strcpy(game->playerTwo.pass, "\0");
-  game->playerTwo.isLogged = '\0';
+  game->playerTwo.score = 0;
+  game->playerTwo.isLogged = 0;
 
 
   struct sockaddr_in my_addr, user_addr ; 
@@ -135,9 +137,23 @@ int main()
               }
 
               int targetIndex = 0; 
+              char content[800] = "";
+              int stop = 0;
 
               while(game->started) {
-                if(game->currentPlayer == user) {
+                if((game->playerOne.score + game->playerTwo.score) == 3) { stop = 1;}
+                if(stop) {
+                  if (game->playerOne.score > game->playerTwo.score) {
+                    sprintf(content, "\n=== FIN DU JEU ===\n%s\n\n %s a gagné !!!\n", game->plateC, game->playerOne.name);
+                  } else {
+                    sprintf(content, "\n=== FIN DU JEU ===\n%s\n\n %s a gagné !!!\n", game->plateC, game->playerTwo.name);
+                  }
+                  sleep(1);
+                  send_response(ns, "show", content);
+                  game->started = 0;
+                }
+
+                if(game->started && game->currentPlayer == user) {
                   send_response(ns, "ask_target", game->plateC);
                   listen_response(ns, response);
                   if(check_target(game, response->content) == 1) {
@@ -147,17 +163,24 @@ int main()
                       game->plateC[targetIndex] = 'X';
                       if(game->currentPlayer == 2) {
                         game->playerOne.score = game->playerOne.score+1;
+                        printf("\nScore player 1 : %d", game->playerOne.score);
                       } else {
                         game->playerTwo.score = game->playerTwo.score+1;
+                        printf("\nScore player 1 : %d", game->playerOne.score);
                       }
+                      sprintf(content, "%s\nAction : %s\nScore %s : %d I Score %s: %d\n", game->plateC, "Touché", game->playerTwo.name, game->playerTwo.score, game->playerOne.name, game->playerOne.score);
                     } else {
                       game->plate[targetIndex] = 'O';
                       game->plateC[targetIndex] = 'O';
+                      sprintf(content, "%s\nAction : %s\nScore %s : %d Score %s: %d\n", game->plateC, "Loupé", game->playerTwo.name, game->playerTwo.score, game->playerOne.name, game->playerOne.score);
                     }
                     game->currentPlayer = game->currentPlayer == 2 ? 3 : 2;
-                    send_response(ns, "show", game->plateC);
+                    send_response(ns, "show", content);
+                    strcpy(content, "\0");
+                    game->started = 1;
                   }
                 }
+
               } // END OF GAME
             }
           }
@@ -169,29 +192,24 @@ int main()
             printf("\nCréation d'un utilisateur");
             char * strToken = strtok ( response->content, ",");
 
-            int id;
             char name[100];
             char pass[100];
-            int id2;
+
             char name2[100];
             char pass2[100];
-            id = strToken ? atoi(strToken) : 0;
-            strToken = strtok ( NULL, ",");
             strcpy(name, strToken);
             strToken = strtok ( NULL, ",");
             strcpy(pass, strToken);
-            strToken = strtok ( NULL, ",");
-            id2 = strToken ? atoi(strToken) : 0;
             strToken = strtok ( NULL, ",");
             strcpy(name2, strToken);
             strToken = strtok ( NULL, ",");
             strcpy(pass2, strToken);
 
-            game->playerOne.id = id;
+            game->playerOne.id = 2;
             strcpy(game->playerOne.name,name);
             strcpy(game->playerOne.pass,pass);
 
-            game->playerTwo.id = id2;
+            game->playerTwo.id = 3;
             strcpy(game->playerTwo.name,name2);
             strcpy(game->playerTwo.pass,pass2);
 

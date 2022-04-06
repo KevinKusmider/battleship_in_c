@@ -24,8 +24,8 @@ int reset_response(RESPONSE *response) {
 
 int send_response(int ns, char * type, char * content) {
     
-    if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) return 0;
-    if((strlen(type) + strlen(content) + 3) > 1000) return 0;
+    if(ns <= 0 || type == NULL || !strlen(type) || content == NULL) exit(15);
+    if((strlen(type) + strlen(content) + 3) > 1000) exit(16);
 
     char toSend[1000];
     int retSend;
